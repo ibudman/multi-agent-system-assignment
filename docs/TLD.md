@@ -426,7 +426,56 @@ This collection stores the final structured output returned to the user after th
 }
 ```
 
+## 6. User Interface Design
+
+The system includes a simple, single-page web interface used to submit learning queries and view results.
+
+The UI allows users to:
+- Enter a free-text learning goal
+- Optionally select preferences (format, goal, budget, city)
+- Trigger the backend pipeline via a single action
+- View the returned learning paths as structured tables
+- Export results in JSON or CSV format
+
+The UI is stateless and driven entirely by the backend response.  
+It does not perform client-side inference, filtering, or data transformation.
 
 
+## 7. Error Handling & Observability
 
+The system is designed to favor partial success over complete failure whenever possible.
 
+Errors are handled at two levels:
+- **Blocking errors**, which prevent the request from completing (e.g., repeated external API failures, database write failures)
+- **Non-blocking errors**, which affect only part of the pipeline (e.g., a single URL failing extraction)
+
+Non-blocking errors do not stop execution. Instead, the system continues processing remaining items and records diagnostic information internally.
+
+Each request is associated with a unique `request_id`, which is persisted in MongoDB along with intermediate agent outputs. This allows developers to trace how far a request progressed and identify which agent encountered issues.
+
+Basic observability is provided through structured logging at each agent step. Logs include the `request_id`, agent name, and high-level status (started, completed, failed).
+
+Warnings and partial failures are stored internally for debugging purposes and are not exposed directly to the end user.
+
+## 8. Security & Configuration
+
+The system is configured using environment variables to manage all external dependencies.
+
+API keys and connection strings for OpenAI, Tavily, and MongoDB Atlas are provided via environment variables and are not stored in source control.
+
+## 9. Deployment Plan
+
+The backend service is deployed on AWS using Elastic Beanstalk to keep deployment simple and production-oriented.
+
+Elastic Beanstalk supports running multiple instances via an Auto Scaling group, allowing the backend to scale horizontally if needed.
+
+MongoDB Atlas is used as the managed database service. The backend connects to the Atlas cluster using the official MongoDB Python client and a connection string provided via environment variables.
+
+The frontend is a simple web UI that allows users to submit queries, trigger the pipeline, view results, and export outputs. The frontend can be deployed as a static site (e.g., S3 or similar static hosting) and is configured to call the deployed backend API.
+
+High-level deployment and validation steps:
+- Deploy the backend to Elastic Beanstalk
+- Configure environment variables in the Elastic Beanstalk environment (OpenAI, Tavily, MongoDB)
+- Verify connectivity to MongoDB Atlas from the deployed backend
+- Deploy the frontend and confirm Frontend ↔ Backend ↔ MongoDB integration
+- Validate correctness by issuing test queries and confirming request data, agent outputs, and final results are logged in MongoDB
