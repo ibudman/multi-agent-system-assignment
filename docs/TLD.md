@@ -154,15 +154,180 @@ The system follows a Sequential StateGraph pattern. Each node represents a speci
   }
 ]
 ```
-// TODO: finish explain all structures
 
-### Agents Definitions
+**`extracted_programs` structure**
+```json
+Program[]
+```
 
-// TODO
+**`results` structure**
+```json
+{
+  "short_term": Program[],
+  "medium_term": Program[],
+  "long_term": Program[]
+}
+```
+
+**`warnings` structure**
+```json
+[
+  "string"
+]
+```
+
+### Agent Definitions
+
+The LangGraph workflow is implemented as a sequential StateGraph:
+`Adaptive Scout → Extraction Specialist → Path Organizer`
+
+Each agent performs a discrete task and updates the shared state.
+
+#### Agent 1: Adaptive Scout (Discovery)
+
+**Responsibility**  
+Find relevant learning programs on the web based on the user’s query and preferences.
+
+**Tools**  
+- Tavily: `search`
+
+**Reads from state**  
+- `input.query`  
+- `input.prefs`
+
+**Writes to state**  
+- `raw_leads` (list of leads)
+- `warnings` (may append)
+
+**Core logic**  
+- Build 2–3 search queries from the user query and preferences.  
+- Treat preferences as priorities, not strict filters.  
+- Collect URLs with lightweight context (title, snippet, source).  
+- Remove duplicate URLs and optionally dedupe by domain.
+
+**Constraints**  
+- Max leads 
+- Results per query
+- Max search queries
+
+**Failure behavior**  
+- If no leads are found, return an empty list and add a warning.
+
+
+#### Agent 2: Extraction Specialist (Structured Program Builder)
+
+**Responsibility**  
+Transform discovered program pages into structured `Program` objects that match the defined 11-column output schema.
+
+**Tools**  
+- Tavily: `extract`  
+- OpenAI (LLM): structured output for schema mapping and normalization  
+- Pydantic: schema validation of extracted `Program` objects
+
+**Reads from state**  
+- `raw_leads` (list of leads)
+
+**Writes to state**  
+- `extracted_programs` (list of `Program` objects)
+- `warnings` (may append)
+
+**Core logic**  
+- Select up to N leads from `raw_leads` for extraction.  
+- For each selected lead:  
+  - Call Tavily `extract` to retrieve the page’s relevant content.  
+  - Truncate or summarize extracted content to fit within a configured token budget.  
+  - Pass the extracted content to the OpenAI model with a strict schema prompt to produce a `Program` object.  
+- Use the LLM to:  
+  - Populate `topics_covered` as a short list of topics.  
+  - Generate a concise `who_this_is_for` summary.  
+  - Normalize format variants (e.g., “remote”, “virtual”, “zoom”) into `online`, `in-person`, or `hybrid`.  
+- Enforce “no guessing”:  
+  - If cost, duration, or prerequisites are not explicitly present, return `"Not specified"`.  
+- Validate each `Program` object using Pydantic before adding it to `extracted_programs`.  
+- Always set `source_link` and `citation` to the extracted URL.
+
+**Constraints**  
+- Max URLs to extract
+- Token limit per page for LLM input
+
+**Failure behavior**  
+- If extraction or validation fails for a URL, skip it and add a warning.  
+- If all extractions fail, return an empty list and add a warning.
+
+#### Agent 3: Path Organizer (Bucketing + Final Assembly)
+
+**Responsibility**  
+Group `extracted_programs` into short-, medium-, and long-term learning paths and assemble the final `results` object for the UI.
+
+**Tools**  
+- None
+
+**Reads from state**  
+- `extracted_programs`
+
+**Writes to state**  
+- `results`  
+- `warnings` (may append)
+
+**Core logic**  
+- Bucket programs into:
+  - `short_term`
+  - `medium_term`
+  - `long_term`
+- Use `duration` when clearly specified.
+- If `duration` is `"Not specified"`:
+  - Check provider and title keywords:
+    - If provider/title indicates **Degree / University / Bachelor / Master** → bucket as `long_term`
+    - If provider/title indicates **Workshop / Intro / Crash course** → bucket as `short_term`
+    - Otherwise default to `medium_term`
+  - Append a warning that bucketing used fallback heuristics due to missing duration.
+- Enforce:
+  - No duplicate programs across buckets
+  - Max programs per bucket
+- If one or more buckets end up empty, append a warning.
+- If total number of programs is low, append a warning.
+
+**Constraints**  
+- Max programs per bucket
+
+**Failure behavior**  
+- If `extracted_programs` is empty:
+  - Return empty buckets
+  - Append a warning indicating that no programs were available to organize
+
 
 ### Graph Flow & Error Handling
 
-// TODO
+#### Graph Flow Overview
+The system uses a linear flow with embedded resilience. Instead of complex conditional branching, it prioritizes completing the request with partial success over failing entirely.
+
+#### Graph Transitions
+- **START → Adaptive Scout**  
+  Triggered on user POST request.
+
+- **Adaptive Scout → Extraction Specialist**  
+  Proceeds if `raw_leads` contains at least one URL.
+
+- **Extraction Specialist → Path Organizer**  
+  Proceeds with all successfully validated `Program` objects.
+
+- **Path Organizer → END**  
+  Finalizes the `results` object for the API response.
+
+#### Error Strategy
+
+- **Node-Level Retries**  
+  Nodes that rely on external APIs use a basic retry policy to handle transient Tavily or OpenAI timeouts.
+
+- **Warning Buffer**  
+  Each node is wrapped in error handling logic. If a non-critical error occurs (e.g., a single URL fails extraction), the issue is appended to the `warnings` list in the shared state and the graph continues.
+
+- **Hard Stop**  
+  If the Adaptive Scout finds zero leads, the graph terminates early before running the Extraction Specialist, returning empty results with a “No leads found” warning.
+
+- **State Recovery**  
+  Since MongoDB is updated after each agent run, the `request_id` allows developers to inspect which agent completed successfully if the pipeline does not reach the END node.
+
 
 ## 5. Data Model
 
