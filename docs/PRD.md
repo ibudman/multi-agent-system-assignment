@@ -71,7 +71,7 @@ The system returns a structured comparison of learning options, grouped by learn
 
 Each learning path is displayed as a **separate table**, containing multiple learning options (rows).
 
-### Table Columns (Recommended Order)
+### Table Columns
 
 | Column | Description |
 |------|-------------|
@@ -138,6 +138,7 @@ Long-term Learning      [ Export JSON ] [ Export CSV ]
 The system should handle the following scenarios gracefully:
 - No relevant learning programs found
 - Partial or missing data (e.g., cost or prerequisites not listed)
+- Some learning paths may contain fewer results than others due to limited data availability
 
 In all cases, the system should prefer returning partial results with clear labeling over failing the request.
 
