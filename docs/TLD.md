@@ -352,11 +352,14 @@ Data is organized into collections, each containing documents linked by a shared
 ```json
 {
   "query": "string",
-  "format": "online | in-person | hybrid | null",
-  "goal": "hobby | career | skill improvement | null",
-  "budget": "free | low-cost | paid | null",
-  "city": "string | null"
+  "prefs": {
+    "format": "online | in-person | hybrid | null",
+    "goal": "hobby | career | skill improvement | null",
+    "budget": "free | low-cost | paid | null",
+    "city": "string | null"
+  }
 }
+
 ```
 
 ### Collection: `agent_runs`

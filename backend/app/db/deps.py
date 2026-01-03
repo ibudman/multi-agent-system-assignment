@@ -1,11 +1,12 @@
 from fastapi import Request
 from pymongo.database import Database
 from pymongo.collection import Collection
-from app.db.mongo import get_db_name
-
-REQUESTS_COLLECTION = "requests"
-AGENT_RUNS_COLLECTION = "agent_runs"
-RESULTS_COLLECTION = "results"
+from app.db.mongo import (
+    get_db_name,
+    REQUESTS_COLLECTION,
+    AGENT_RUNS_COLLECTION,
+    RESULTS_COLLECTION,
+)
 
 
 def get_db(request: Request) -> Database:

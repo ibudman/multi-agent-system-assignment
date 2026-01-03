@@ -2,6 +2,11 @@ import os
 import certifi
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
+from pymongo.synchronous.database import Database
+
+REQUESTS_COLLECTION = "requests"
+AGENT_RUNS_COLLECTION = "agent_runs"
+RESULTS_COLLECTION = "results"
 
 
 def connect_mongo() -> MongoClient:
@@ -29,3 +34,9 @@ def disconnect_mongo(client: MongoClient) -> None:
 
 def get_db_name() -> str:
     return os.getenv("MONGODB_DB")
+
+
+def init_db(db: Database):
+    db[REQUESTS_COLLECTION].create_index("request_id", unique=True)
+    db[AGENT_RUNS_COLLECTION].create_index("request_id")
+    db[RESULTS_COLLECTION].create_index("request_id", unique=True)
