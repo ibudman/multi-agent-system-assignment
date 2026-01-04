@@ -62,7 +62,7 @@ class AgentRunDoc(BaseModel):
 # ---------- results collection ----------
 
 
-class Program(BaseModel):
+class ProgramRecord(BaseModel):
     program_name: str
     provider: str
     topics_covered: List[str] = Field(default_factory=list)
@@ -78,9 +78,9 @@ class Program(BaseModel):
 
 
 class Paths(BaseModel):
-    short_term: List[Program] = Field(default_factory=list)
-    medium_term: List[Program] = Field(default_factory=list)
-    long_term: List[Program] = Field(default_factory=list)
+    short_term: List[ProgramRecord] = Field(default_factory=list)
+    medium_term: List[ProgramRecord] = Field(default_factory=list)
+    long_term: List[ProgramRecord] = Field(default_factory=list)
 
 
 class ResultDoc(BaseModel):

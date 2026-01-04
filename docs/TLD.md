@@ -157,15 +157,15 @@ The system follows a Sequential StateGraph pattern. Each node represents a speci
 
 **`extracted_programs` structure**
 ```json
-Program[]
+ProgramRecord[]
 ```
 
 **`results` structure**
 ```json
 {
-  "short_term": Program[],
-  "medium_term": Program[],
-  "long_term": Program[]
+  "short_term": ProgramRecord[],
+  "medium_term": ProgramRecord[],
+  "long_term": ProgramRecord[]
 }
 ```
 
@@ -405,13 +405,13 @@ This collection stores the final structured output returned to the user after th
 **`paths` JSON structure**
 ```json
 {
-  "short_term": [Program],
-  "medium_term": [Program],
-  "long_term": [Program]
+  "short_term": [ProgramRecord],
+  "medium_term": [ProgramRecord],
+  "long_term": [ProgramRecord]
 }
 ```
 
-**`Program` JSON structure**
+**`ProgramRecord` JSON structure**
 ```json
 {
   "program_name": "string",
