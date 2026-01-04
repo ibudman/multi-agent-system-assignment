@@ -126,7 +126,7 @@ The system follows a Sequential StateGraph pattern. Each node represents a speci
 | `request_id` | string | Unique identifier for the request |
 | `input` | object | User query and optional preferences |
 | `raw_leads` | array | List of discovered learning leads |
-| `extracted_programs` | array | List of structured Program objects |
+| `extracted_programs` | array | List of structured ProgramRecord objects |
 | `results` | object | Final categorized learning paths |
 | `warnings` | array | Non-blocking issues encountered during processing |
 
@@ -217,18 +217,18 @@ Find relevant learning programs on the web based on the user’s query and prefe
 #### Agent 2: Extraction Specialist (Structured Program Builder)
 
 **Responsibility**  
-Transform discovered program pages into structured `Program` objects that match the defined 11-column output schema.
+Transform discovered program pages into structured `ProgramRecord` objects that match the persisted output schema.
 
 **Tools**  
 - Tavily: `extract`  
 - OpenAI (LLM): structured output for schema mapping and normalization  
-- Pydantic: schema validation of extracted `Program` objects
+- Pydantic: schema validation of extracted `ProgramRecord` objects
 
 **Reads from state**  
 - `raw_leads` (list of leads)
 
 **Writes to state**  
-- `extracted_programs` (list of `Program` objects)
+- `extracted_programs` (list of `ProgramRecord` objects)
 - `warnings` (may append)
 
 **Core logic**  
@@ -236,14 +236,17 @@ Transform discovered program pages into structured `Program` objects that match 
 - For each selected lead:  
   - Call Tavily `extract` to retrieve the page’s relevant content.  
   - Truncate or summarize extracted content to fit within a configured token budget.  
-  - Pass the extracted content to the OpenAI model with a strict schema prompt to produce a `Program` object.  
+  - Pass the extracted content to the OpenAI model with a strict schema prompt to produce a `ProgramRecord` object.  
 - Use the LLM to:  
   - Populate `topics_covered` as a short list of topics.  
   - Generate a concise `who_this_is_for` summary.  
   - Normalize format variants (e.g., “remote”, “virtual”, “zoom”) into `online`, `in-person`, or `hybrid`.  
 - Enforce “no guessing”:  
-  - If cost, duration, or prerequisites are not explicitly present, return `"Not specified"`.  
-- Validate each `Program` object using Pydantic before adding it to `extracted_programs`.  
+  - If duration or prerequisites are not explicitly present, return `"Not specified"`.
+  - If format is unclear or not stated, return `"Not specified"`.
+  - If cost is not explicitly present, set cost_text to `"Not specified"` and cost_usd to `null`.
+  - If cost is present, set cost_text from the page; set cost_usd only when a numeric USD amount is explicitly stated (otherwise `null`).
+- Validate each `ProgramRecord` object using Pydantic before adding it to `extracted_programs`.  
 - Always set `source_link` and `citation` to the extracted URL.
 
 **Constraints**  
@@ -257,7 +260,7 @@ Transform discovered program pages into structured `Program` objects that match 
 #### Agent 3: Path Organizer (Bucketing + Final Assembly)
 
 **Responsibility**  
-Group `extracted_programs` into short-, medium-, and long-term learning paths and assemble the final `results` object for the UI.
+Group `extracted_programs` into short-, medium-, and long-term learning paths and assemble the final categorized `results`, later mapped to API response.
 
 **Tools**  
 - None
@@ -309,7 +312,7 @@ The system uses a linear flow with embedded resilience. Instead of complex condi
   Proceeds if `raw_leads` contains at least one URL.
 
 - **Extraction Specialist → Path Organizer**  
-  Proceeds with all successfully validated `Program` objects.
+  Proceeds with all successfully validated `ProgramRecord` objects.
 
 - **Path Organizer → END**  
   Finalizes the `results` object for the API response.
