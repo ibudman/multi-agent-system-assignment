@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, HTTPException
 import uuid
 from datetime import datetime, timezone
 from app.db.deps import get_requests_collection
+from app.graph.run import run_graph
 from app.models.schemas import (
     HealthCheckResponse,
     LearningPathsRequest,
@@ -41,11 +42,15 @@ def generate_learning_paths(
 
     try:
         # TODO: implement logic
-        empty_results = LearningPathsResults(
-            short_term=[],
-            medium_term=[],
-            long_term=[],
+        final_state = run_graph(
+            request_id=request_id_str,
+            payload={
+                "query": payload.query,
+                "prefs": payload.prefs.model_dump() if payload.prefs else None,
+            },
         )
+
+        results = final_state["results"]  # TODO: match type (convert cost)
 
         # update on success
         requests_col.update_one(
@@ -59,8 +64,8 @@ def generate_learning_paths(
 
         return LearningPathsResponse(
             request_id=request_id,
-            results=empty_results,
-            warnings=["placeholder: pipeline not implemented"],
+            results=results,
+            warnings=final_state["warnings"],
         )
 
     except Exception as e:
