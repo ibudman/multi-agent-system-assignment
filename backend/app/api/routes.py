@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api")
 
 @router.get("/health")
 def health_check() -> HealthCheckResponse:
-    empty_response = HealthCheckResponse(status="ok")  # TODO: implement logic
+    empty_response = HealthCheckResponse(status="ok")
     return empty_response
 
 
@@ -49,7 +49,7 @@ def generate_learning_paths(
 
         # update on success
         requests_col.update_one(
-            {"request_id": request_id_str},  # TODO: use str?
+            {"request_id": request_id_str},
             {
                 "$set": {
                     "status": "completed",
