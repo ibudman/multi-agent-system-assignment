@@ -1,15 +1,17 @@
 from fastapi import APIRouter, Request, HTTPException
-import uuid
-from datetime import datetime, timezone
-from app.db.deps import get_requests_collection
-from app.graph.run import run_graph
+from app.db.deps import (
+    get_requests_collection,
+    get_agent_runs_collection,
+    get_results_collection,
+)
+from app.db.repos import RequestsRepo, AgentRunsRepo, ResultsRepo
+from app.graph.runner import GraphRunner
 from app.models.schemas import (
     HealthCheckResponse,
     LearningPathsRequest,
     LearningPathsResponse,
-    LearningPathsResults,
 )
-from app.db.models import RequestDoc, RequestInput
+from app.services.learning_paths import LearningPathsService
 
 router = APIRouter(prefix="/api")
 
@@ -24,60 +26,18 @@ def health_check() -> HealthCheckResponse:
 def generate_learning_paths(
     request: Request, payload: LearningPathsRequest
 ) -> LearningPathsResponse:
-    request_id = uuid.uuid4()
-    request_id_str = str(request_id)
+    requests_repo = RequestsRepo(get_requests_collection(request))
+    agent_runs_repo = AgentRunsRepo(get_agent_runs_collection(request))
+    results_repo = ResultsRepo(get_results_collection(request))
 
-    requests_col = get_requests_collection(request)
-    doc = RequestDoc(
-        request_id=request_id_str,
-        created_at=datetime.now(timezone.utc),
-        status="running",
-        input=RequestInput(
-            query=payload.query,
-            prefs=(payload.prefs.model_dump() if payload.prefs else None),
-        ),
-        error=None,
+    runner = GraphRunner(agent_runs_repo=agent_runs_repo)
+    service = LearningPathsService(
+        requests_repo=requests_repo,
+        agent_runs_repo=agent_runs_repo,
+        results_repo=results_repo,
+        runner=runner,
     )
-    requests_col.insert_one(doc.model_dump())
-
     try:
-        # TODO: implement logic
-        final_state = run_graph(
-            request_id=request_id_str,
-            payload={
-                "query": payload.query,
-                "prefs": payload.prefs.model_dump() if payload.prefs else None,
-            },
-        )
-
-        results = final_state["results"]  # TODO: match type (convert cost)
-
-        # update on success
-        requests_col.update_one(
-            {"request_id": request_id_str},
-            {
-                "$set": {
-                    "status": "completed",
-                }
-            },
-        )
-
-        return LearningPathsResponse(
-            request_id=request_id,
-            results=results,
-            warnings=final_state["warnings"],
-        )
-
-    except Exception as e:
-        # mark failed in requests collection - status, error
-        requests_col.update_one(
-            {"request_id": request_id_str},
-            {
-                "$set": {
-                    "status": "failed",
-                    "error": str(e),
-                }
-            },
-        )
-
+        return service.generate(payload)
+    except Exception:
         raise HTTPException(status_code=500, detail="Processing failed")

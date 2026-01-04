@@ -1,7 +1,6 @@
 from datetime import datetime
-from typing import List, Literal, Optional
-from uuid import UUID
-from pydantic import BaseModel, Field, AnyUrl
+from typing import List, Literal, Optional, Dict, Any
+from pydantic import BaseModel, Field
 from app.models.base import ProgramRecordBase
 
 # ---------- Shared types ----------
@@ -40,17 +39,12 @@ class AgentCounts(BaseModel):
     extracted_programs: int = 0
 
 
-class AgentOutputSummary(BaseModel):
-    counts: AgentCounts = Field(default_factory=AgentCounts)
-    selected_urls: List[AnyUrl] = Field(default_factory=list)
-
-
 class AgentRunDoc(BaseModel):
-    request_id: UUID
+    request_id: str
     agent_name: str
     started_at: datetime
     ended_at: Optional[datetime] = None
-    output_summary: Optional[AgentOutputSummary] = None
+    output_summary: Optional[Dict[str, Any]] = None
     warnings: List[str] = Field(default_factory=list)
     error: Optional[str] = None
 
@@ -69,7 +63,7 @@ class Paths(BaseModel):
 
 
 class ResultDoc(BaseModel):
-    request_id: UUID
+    request_id: str
     created_at: datetime
     paths: Paths = Field(default_factory=Paths)
     warnings: List[str] = Field(default_factory=list)

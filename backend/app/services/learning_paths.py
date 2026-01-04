@@ -1,0 +1,84 @@
+import uuid
+from dataclasses import dataclass
+from datetime import datetime, timezone
+
+from app.db.models import RequestDoc, RequestInput, Paths, ProgramRecordDB
+from app.db.repos import RequestsRepo, AgentRunsRepo, ResultsRepo
+from app.graph.runner import GraphRunner
+from app.graph.state import ProgramRecordGraph, ResultsPayload
+from app.models.schemas import (
+    LearningPathsRequest,
+    LearningPathsResponse,
+    LearningPathsResults,
+)
+
+
+def results_payload_to_paths(results: ResultsPayload) -> Paths:
+    def to_db(p: ProgramRecordGraph) -> ProgramRecordDB:
+        return ProgramRecordDB.model_validate(p.model_dump())
+
+    return Paths(
+        short_term=[to_db(p) for p in results.get("short_term", [])],
+        medium_term=[to_db(p) for p in results.get("medium_term", [])],
+        long_term=[to_db(p) for p in results.get("long_term", [])],
+    )
+
+
+@dataclass
+class LearningPathsService:
+    requests_repo: RequestsRepo
+    agent_runs_repo: AgentRunsRepo
+    results_repo: ResultsRepo
+    runner: GraphRunner
+
+    def generate(self, payload: LearningPathsRequest) -> LearningPathsResponse:
+        request_id = uuid.uuid4()
+        request_id_str = str(request_id)
+
+        doc = RequestDoc(
+            request_id=request_id_str,
+            created_at=datetime.now(timezone.utc),
+            status="running",
+            input=RequestInput(
+                query=payload.query,
+                prefs=(payload.prefs.model_dump() if payload.prefs else None),
+            ),
+            error=None,
+        )
+        self.requests_repo.create_running(doc)
+
+        try:
+            # TODO: implement logic
+            final_state = self.runner.run(
+                request_id=request_id_str,
+                payload={
+                    "query": payload.query,
+                    "prefs": payload.prefs.model_dump() if payload.prefs else None,
+                },
+            )
+
+            final_state_results = final_state.get("results") or {
+                "short_term": [],
+                "medium_term": [],
+                "long_term": [],
+            }
+            results = LearningPathsResults.model_validate(
+                final_state_results
+            )  # TODO: convert cost
+            warnings = final_state.get("warnings", [])
+
+            self.results_repo.upsert_result(
+                request_id=request_id_str,
+                paths=results_payload_to_paths(final_state_results),
+                warnings=warnings,
+                error=None,
+            )
+            self.requests_repo.mark_completed(request_id=request_id_str)
+
+            return LearningPathsResponse(
+                request_id=request_id, results=results, warnings=warnings
+            )
+
+        except Exception as e:
+            self.requests_repo.mark_failed(request_id=request_id_str, error=str(e))
+            raise e
