@@ -1,6 +1,6 @@
-# app/graph/state.py
-from __future__ import annotations
-from typing import TypedDict, Optional, List, Literal, Dict, Any
+import operator
+from typing import TypedDict, Optional, List, Literal, Annotated
+from app.models.base import ProgramRecordBase
 
 PrefsFormat = Literal["online", "in-person", "hybrid"]
 PrefsGoal = Literal["hobby", "career", "skill improvement"]
@@ -14,9 +14,9 @@ class InputPrefs(TypedDict, total=False):
     city: Optional[str]
 
 
-class InputPayload(TypedDict, total=False):
+class InputPayload(TypedDict):
     query: str
-    prefs: InputPrefs
+    prefs: Optional[InputPrefs]
 
 
 class RawLead(TypedDict, total=False):
@@ -26,28 +26,33 @@ class RawLead(TypedDict, total=False):
     source: Optional[str]
 
 
+class ProgramRecordGraph(ProgramRecordBase):
+    pass
+
+
+class ResultsPayload(TypedDict):
+    short_term: List[ProgramRecordGraph]
+    medium_term: List[ProgramRecordGraph]
+    long_term: List[ProgramRecordGraph]
+
+
 class GraphState(TypedDict, total=False):
     request_id: str
     input: InputPayload
-
-    raw_leads: List[RawLead]
-    extracted_programs: List[Dict[str, Any]]  # replace with Program later if you want
-    results: Dict[str, Any]  # {"short_term": [...], ...}
-    warnings: List[str]
-
-    status: Literal["running", "succeeded", "failed"]
-    error: Optional[str]
+    # reducers: nodes return partial updates that get appended/merged
+    raw_leads: Annotated[List[RawLead], operator.add]
+    extracted_programs: Annotated[List[ProgramRecordGraph], operator.add]
+    warnings: Annotated[List[str], operator.add]
+    # organizer overwrites this whole object
+    results: ResultsPayload
 
 
-def ensure_defaults(state: GraphState) -> GraphState:
+def create_initial_state(request_id: str, payload: InputPayload) -> GraphState:
     return {
-        **state,
-        "raw_leads": state.get("raw_leads", []),
-        "extracted_programs": state.get("extracted_programs", []),
-        "results": state.get(
-            "results", {"short_term": [], "medium_term": [], "long_term": []}
-        ),
-        "warnings": state.get("warnings", []),
-        "status": state.get("status", "running"),
-        "error": state.get("error"),
+        "request_id": request_id,
+        "input": payload,
+        "raw_leads": [],
+        "extracted_programs": [],
+        "results": {"short_term": [], "medium_term": [], "long_term": []},
+        "warnings": [],
     }
