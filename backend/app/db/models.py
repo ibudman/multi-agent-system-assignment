@@ -1,16 +1,12 @@
-from __future__ import annotations
-
 from datetime import datetime
 from typing import List, Literal, Optional
 from uuid import UUID
-
 from pydantic import BaseModel, Field, AnyUrl
-
+from app.models.base import ProgramRecordBase
 
 # ---------- Shared types ----------
 
 RequestStatus = Literal["running", "completed", "failed"]
-ProgramFormat = Literal["online", "in-person", "hybrid", "Not specified"]
 
 
 # ---------- requests collection ----------
@@ -62,25 +58,14 @@ class AgentRunDoc(BaseModel):
 # ---------- results collection ----------
 
 
-class ProgramRecord(BaseModel):
-    program_name: str
-    provider: str
-    topics_covered: List[str] = Field(default_factory=list)
-    format: ProgramFormat = "Not specified"
-    duration: str = "Not specified"
-    cost_usd: Optional[float] = None
-    cost_text: str = "Not specified"
-    prerequisites: str = "Not specified"
-    location: str = "Not specified"
-    who_this_is_for: str = "Not specified"
-    source_link: AnyUrl
-    citation: AnyUrl
+class ProgramRecordDB(ProgramRecordBase):
+    pass
 
 
 class Paths(BaseModel):
-    short_term: List[ProgramRecord] = Field(default_factory=list)
-    medium_term: List[ProgramRecord] = Field(default_factory=list)
-    long_term: List[ProgramRecord] = Field(default_factory=list)
+    short_term: List[ProgramRecordDB] = Field(default_factory=list)
+    medium_term: List[ProgramRecordDB] = Field(default_factory=list)
+    long_term: List[ProgramRecordDB] = Field(default_factory=list)
 
 
 class ResultDoc(BaseModel):
