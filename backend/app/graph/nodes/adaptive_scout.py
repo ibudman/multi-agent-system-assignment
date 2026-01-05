@@ -1,7 +1,8 @@
 from app.graph.state import GraphState
+from tavily import TavilyClient
 
 
-def adaptive_scout(state: GraphState) -> GraphState:
+def adaptive_scout(state: GraphState, tavily_client: TavilyClient) -> GraphState:
     inp = state.get("input") or {}
     query = inp.get("query")
     prefs = inp.get("prefs")

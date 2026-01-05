@@ -12,6 +12,7 @@ from app.models.schemas import (
     LearningPathsResponse,
 )
 from app.services.learning_paths import LearningPathsService
+from app.graph.deps import GraphDeps
 
 router = APIRouter(prefix="/api")
 
@@ -30,7 +31,12 @@ def generate_learning_paths(
     agent_runs_repo = AgentRunsRepo(get_agent_runs_collection(request))
     results_repo = ResultsRepo(get_results_collection(request))
 
-    runner = GraphRunner(agent_runs_repo=agent_runs_repo)
+    openai_client = request.app.state.openai_client
+    tavily_client = request.app.state.tavily_client
+
+    deps = GraphDeps(openai_client=openai_client, tavily_client=tavily_client)
+
+    runner = GraphRunner(agent_runs_repo=agent_runs_repo, deps=deps)
     service = LearningPathsService(
         requests_repo=requests_repo,
         agent_runs_repo=agent_runs_repo,

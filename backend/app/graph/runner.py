@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from app.db.models import AgentRunDoc
 from app.db.repos import AgentRunsRepo
 from app.graph.build import build_graph
+from app.graph.deps import GraphDeps
 from app.graph.state import create_initial_state, InputPayload, GraphState
 
 
@@ -50,10 +51,11 @@ def _output_summary(node_name: str, snapshot: Dict[str, Any]) -> dict:
 @dataclass
 class GraphRunner:
     agent_runs_repo: AgentRunsRepo
+    deps: GraphDeps
     graph: Any = None
 
     def __post_init__(self) -> None:
-        self.graph = self.graph or build_graph()
+        self.graph = self.graph or build_graph(self.deps)
 
     def run(self, request_id: str, payload: InputPayload) -> GraphState:
         # Initialize State
