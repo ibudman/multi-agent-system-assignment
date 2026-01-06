@@ -24,25 +24,26 @@ def _merge_for_snapshot(
     return merged
 
 
-def _output_summary(node_name: str, snapshot: Dict[str, Any]) -> dict:
+def _output_summary(snapshot: Dict[str, Any]) -> dict:
+    raw_leads = snapshot.get("raw_leads", []) or []
+    extracted = snapshot.get("extracted_programs", []) or []
+    results = snapshot.get("results") or {}
+
     summary: dict = {
         "counts": {
-            "raw_leads": len(snapshot.get("raw_leads", [])),
-            "extracted_programs": len(snapshot.get("extracted_programs", [])),
-        }
+            "raw_leads": len(raw_leads),
+            "extracted_programs": len(extracted),
+        },
+        "selected_urls": [
+            x.get("url") for x in raw_leads if isinstance(x, dict) and x.get("url")
+        ][:10],
     }
 
-    if node_name == "scout":
-        summary["selected_urls"] = [
-            x.get("url") for x in snapshot.get("raw_leads", []) if isinstance(x, dict)
-        ][:10]
-
-    if node_name == "organize":
-        results = snapshot.get("results") or {}
+    if results:
         summary["bucket_counts"] = {
-            "short_term": len(results.get("short_term", [])),
-            "medium_term": len(results.get("medium_term", [])),
-            "long_term": len(results.get("long_term", [])),
+            "short_term": len(results.get("short_term", []) or []),
+            "medium_term": len(results.get("medium_term", []) or []),
+            "long_term": len(results.get("long_term", []) or []),
         }
 
     return summary
@@ -88,7 +89,7 @@ class GraphRunner:
                 agent_name=node_name,
                 started_at=started_at,
                 ended_at=ended_at,
-                output_summary=_output_summary(node_name, snapshot),
+                output_summary=_output_summary(snapshot),
                 warnings=step_warnings,
                 error=None,  # TODO: check
             )

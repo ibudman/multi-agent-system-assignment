@@ -378,17 +378,26 @@ Data is organized into collections, each containing documents linked by a shared
 | `warnings` | array | Non-fatal issues encountered during agent execution |
 | `error` | string \| null | Agent-level error message if failed, otherwise `null` |
 
-**`output_summary` example**
+
+`output_summary` is cumulative and reflects the pipeline state after the current agent finishes.
+Individual fields are populated by different agents as they run, and may be absent if the responsible agent has not executed yet.
+
+**example**
 ```json
 {
   "counts": {
-    "raw_leads": 12,
-    "extracted_programs": 8
+    "raw_leads": 12, // agent 1
+    "extracted_programs": 8 // agent 2
   },
   "selected_urls": [
     "https://example.com/course-1",
     "https://example.com/course-2"
-  ]
+  ], // agent 1
+  "bucket_counts": {
+    "short_term": 3,
+    "medium_term": 4,
+    "long_term": 1
+  }// agent 3
 }
 ```
 
