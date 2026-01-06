@@ -27,6 +27,9 @@ class RawLead(TypedDict, total=False):
 
 
 class ProgramRecordGraph(ProgramRecordBase):
+    format: str = "Not specified"
+    source_link: str
+    citation: str
     pass
 
 
