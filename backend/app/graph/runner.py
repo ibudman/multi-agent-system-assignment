@@ -36,7 +36,7 @@ def _output_summary(snapshot: Dict[str, Any]) -> dict:
         },
         "selected_urls": [
             x.get("url") for x in raw_leads if isinstance(x, dict) and x.get("url")
-        ][:10],
+        ],
     }
 
     if results:
