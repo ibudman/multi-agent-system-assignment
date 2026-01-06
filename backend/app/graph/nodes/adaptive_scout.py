@@ -1,7 +1,6 @@
 from tavily import TavilyClient
 from typing import Optional
-from app.graph.state import GraphState, InputPrefs
-
+from app.graph.state import GraphState, InputPrefs, RawLead
 
 MAX_SEARCH_QUERIES = 3
 RESULTS_PER_QUERY = 6
@@ -46,7 +45,7 @@ def adaptive_scout(state: GraphState, tavily_client: TavilyClient) -> GraphState
     search_queries = _build_queries(query, prefs)
 
     # 2) call Tavily search
-    warnings = []
+    warnings: list[str] = []
     raw_results = []
     for q in search_queries:
         try:
@@ -58,13 +57,13 @@ def adaptive_scout(state: GraphState, tavily_client: TavilyClient) -> GraphState
 
             raw_results.extend(
                 res.get("results") or []
-            )  # title, url, content, score, raw_content, favicon
+            )  # [title, url, content, score, raw_content, favicon]
         except Exception as e:
             warnings.append(f"Adaptive Scout: Search failed for query '{q}' ({str(e)})")
 
     # 3) map to RawLead list
-    new_leads = []
-    seen_urls = set()
+    new_leads: list[RawLead] = []
+    seen_urls: list[str] = set()
 
     for res in raw_results:
         url = res.get("url")
