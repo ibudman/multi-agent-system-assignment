@@ -1,26 +1,38 @@
-import {useState} from "react";
+import {useRef, useState} from "react";
 import {LearningForm} from "./components/LearningForm";
 import {ResultsTables} from "./components/ResultsTables";
 import {Warnings} from "./components/Warnings";
 import type {LearningPathsRequest, LearningPathsResponse} from "./types";
-import {mockLearningPathsResponse} from "./mockResponse";
+import {fetchLearningPaths} from "./api/learningPaths";
 
-type Status = "idle" | "loading" | "done";
+type Status = "idle" | "loading" | "done" | "error";
 
 export default function App() {
     const [status, setStatus] = useState<Status>("idle");
     const [data, setData] = useState<LearningPathsResponse | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
-    function handleSubmit(payload: LearningPathsRequest) {
+    const abortRef = useRef<AbortController | null>(null);
+
+    async function handleSubmit(payload: LearningPathsRequest) {
         console.log("REQUEST payload:", payload);
 
         setStatus("loading");
+        setError(null);
         setData(null);
 
-        setTimeout(() => {
-            setData(mockLearningPathsResponse);
+        abortRef.current?.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
+
+        try {
+            const resp = await fetchLearningPaths(payload, controller.signal);
+            setData(resp);
             setStatus("done");
-        }, 800);
+        } catch (e: any) {
+            setError(e?.message ?? "Unknown error");
+            setStatus("error");
+        }
     }
 
     return (
@@ -31,7 +43,16 @@ export default function App() {
 
             <div style={{marginTop: 12}}>
                 <div style={{fontWeight: 600}}>Status</div>
-                <div>{status === "loading" ? "Loading…" : status === "done" ? "Done" : "Idle"}</div>
+                <div>
+                    {status === "loading"
+                        ? "Loading…"
+                        : status === "done"
+                            ? "Done"
+                            : status === "error"
+                                ? "Error"
+                                : "Idle"}
+                </div>
+                {error && <div style={{marginTop: 8, color: "crimson"}}>{error}</div>}
             </div>
 
             {data && (
