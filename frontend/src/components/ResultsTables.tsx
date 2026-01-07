@@ -20,18 +20,36 @@ function Bucket({
                 <div style={{display: "flex", gap: 8}}>
                     <button
                         type="button"
+                        disabled={programs.length === 0}
                         onClick={() => exportJson(programs, `${fileKey}.json`)}
-                        style={{padding: "8px 10px", borderRadius: 10, border: "1px solid #999", background: "#fff"}}
+                        style={{
+                            padding: "8px 10px",
+                            borderRadius: 10,
+                            border: "1px solid #999",
+                            background: "#fff",
+                            opacity: programs.length === 0 ? 0.5 : 1,
+                            cursor: programs.length === 0 ? "not-allowed" : "pointer",
+                        }}
                     >
                         Export JSON
                     </button>
+
                     <button
                         type="button"
+                        disabled={programs.length === 0}
                         onClick={() => exportProgramsCsv(programs, `${fileKey}.csv`)}
-                        style={{padding: "8px 10px", borderRadius: 10, border: "1px solid #999", background: "#fff"}}
+                        style={{
+                            padding: "8px 10px",
+                            borderRadius: 10,
+                            border: "1px solid #999",
+                            background: "#fff",
+                            opacity: programs.length === 0 ? 0.5 : 1,
+                            cursor: programs.length === 0 ? "not-allowed" : "pointer",
+                        }}
                     >
                         Export CSV
                     </button>
+
                 </div>
             </div>
 
