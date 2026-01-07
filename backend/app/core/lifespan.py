@@ -23,11 +23,9 @@ async def lifespan(app: FastAPI):
     else:
         app.state.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         app.state.tavily_client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
-    # TODO: add other clients here
 
     try:
         yield
     finally:
         # Shutdown
-        # TODO: add other clients here
         disconnect_mongo(mongo_client)
