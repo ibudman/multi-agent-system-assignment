@@ -39,20 +39,23 @@ export default function App() {
             <h1>Learning Path Explorer</h1>
 
             <LearningForm onSubmit={handleSubmit} disabled={status === "loading"}/>
+            
+            <div style={{marginTop: 12, color: "#555"}}>
+                {status === "idle" && (
+                    <div>Enter a learning goal and optional preferences to begin.</div>
+                )}
 
-            <div style={{marginTop: 12}}>
-                <div style={{fontWeight: 600}}>Status</div>
-                <div>
-                    {status === "loading"
-                        ? "Loading…"
-                        : status === "done"
-                            ? "Done"
-                            : status === "error"
-                                ? "Error"
-                                : "Idle"}
-                </div>
-                {error && <div style={{marginTop: 8, color: "crimson"}}>{error}</div>}
+                {status === "loading" && (
+                    <div>Searching, extracting, and organizing learning paths…</div>
+                )}
+
+                {status === "error" && (
+                    <div style={{color: "crimson"}}>
+                        Something went wrong. {error}
+                    </div>
+                )}
             </div>
+
 
             {data && (
                 <div style={{marginTop: 12}}>
