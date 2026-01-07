@@ -19,7 +19,6 @@ export default function App() {
 
         setStatus("loading");
         setError(null);
-        setData(null);
 
         abortRef.current?.abort();
         const controller = new AbortController();
