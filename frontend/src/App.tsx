@@ -1,35 +1,46 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import {useState} from "react";
+import {LearningForm} from "./components/LearningForm";
+import {ResultsTables} from "./components/ResultsTables";
+import {Warnings} from "./components/Warnings";
+import type {LearningPathsRequest, LearningPathsResponse} from "./types";
+import {mockLearningPathsResponse} from "./mockResponse";
 
-function App() {
-  const [count, setCount] = useState(0)
+type Status = "idle" | "loading" | "done";
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+export default function App() {
+    const [status, setStatus] = useState<Status>("idle");
+    const [data, setData] = useState<LearningPathsResponse | null>(null);
+
+    function handleSubmit(payload: LearningPathsRequest) {
+        console.log("REQUEST payload:", payload);
+
+        setStatus("loading");
+        setData(null);
+
+        setTimeout(() => {
+            setData(mockLearningPathsResponse);
+            setStatus("done");
+        }, 800);
+    }
+
+    return (
+        <div style={{padding: 24, fontFamily: "system-ui, Arial"}}>
+            <h1>Learning Path Explorer</h1>
+
+            <LearningForm onSubmit={handleSubmit} disabled={status === "loading"}/>
+
+            <div style={{marginTop: 12}}>
+                <div style={{fontWeight: 600}}>Status</div>
+                <div>{status === "loading" ? "Loading…" : status === "done" ? "Done" : "Idle"}</div>
+            </div>
+
+            {data && (
+                <div style={{marginTop: 12}}>
+                    <div style={{color: "#555", fontSize: 12}}>request_id: {data.request_id}</div>
+                    <Warnings warnings={data.warnings}/>
+                    <ResultsTables results={data.results}/>
+                </div>
+            )}
+        </div>
+    );
 }
-
-export default App
