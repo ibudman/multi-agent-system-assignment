@@ -67,33 +67,49 @@ class GraphRunner:
         # Track timing for the first node
         last_step_time = datetime.now(timezone.utc)
 
+        last_node_name: str | None = None
+
         # Stream the execution
         # event is a dict: { "node_name": { "delta_key": "delta_value" }
-        for event in self.graph.stream(initial_state, stream_mode="updates"):
-            started_at = last_step_time
-            ended_at = datetime.now(timezone.utc)
-            last_step_time = ended_at
+        try:
+            for event in self.graph.stream(initial_state, stream_mode="updates"):
+                started_at = last_step_time
+                ended_at = datetime.now(timezone.utc)
+                last_step_time = ended_at
 
-            node_name, delta = next(iter(event.items()))
+                node_name, delta = next(iter(event.items()))
+                last_node_name = node_name
 
-            # STEP-ONLY warnings: only what THIS node returned
-            step_warnings = delta.get("warnings") or []
-            if not isinstance(step_warnings, list):
-                step_warnings = [str(step_warnings)]
+                # STEP-ONLY warnings: only what THIS node returned
+                step_warnings = delta.get("warnings") or []
+                if not isinstance(step_warnings, list):
+                    step_warnings = [str(step_warnings)]
 
-            # Merge delta into snapshot so output_summary can reflect latest state
-            snapshot = _merge_for_snapshot(snapshot, delta)
+                # Merge delta into snapshot so output_summary can reflect latest state
+                snapshot = _merge_for_snapshot(snapshot, delta)
 
+                doc = AgentRunDoc(
+                    request_id=request_id,
+                    agent_name=node_name,
+                    started_at=started_at,
+                    ended_at=ended_at,
+                    output_summary=_output_summary(snapshot),
+                    warnings=step_warnings,
+                    error=None,
+                )
+                self.agent_runs_repo.insert_run(doc)
+
+        except Exception as e:
             doc = AgentRunDoc(
                 request_id=request_id,
-                agent_name=node_name,
-                started_at=started_at,
-                ended_at=ended_at,
+                agent_name=last_node_name or "unknown",
+                started_at=last_step_time,
+                ended_at=datetime.now(timezone.utc),
                 output_summary=_output_summary(snapshot),
-                warnings=step_warnings,
-                error=None,  # TODO: check
+                warnings=[],
+                error=str(e),
             )
-
             self.agent_runs_repo.insert_run(doc)
+            raise
 
         return snapshot  # final state
