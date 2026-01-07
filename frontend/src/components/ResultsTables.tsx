@@ -107,14 +107,15 @@ function Bucket({
                                 <td style={{padding: 10, borderBottom: "1px solid #f1f1f1"}}>{p.who_this_is_for}</td>
                                 <td style={{padding: 10, borderBottom: "1px solid #f1f1f1"}}>
                                     <a href={p.source_link} target="_blank" rel="noreferrer">
-                                        Source
+                                        View source
                                     </a>
                                 </td>
                                 <td style={{padding: 10, borderBottom: "1px solid #f1f1f1"}}>
                                     <a href={p.citation} target="_blank" rel="noreferrer">
-                                        Citation
+                                        View citation
                                     </a>
                                 </td>
+
                             </tr>
                         ))}
                         </tbody>
