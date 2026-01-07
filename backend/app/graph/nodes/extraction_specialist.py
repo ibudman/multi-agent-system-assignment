@@ -1,3 +1,4 @@
+from openai.types.responses import EasyInputMessageParam
 from tavily import TavilyClient
 from openai import OpenAI
 import re
@@ -119,13 +120,15 @@ Field rules:
 
 
 def _llm_program_record(openai_client: OpenAI, url: str, page_text: str) -> dict:
+    messages: list[EasyInputMessageParam] = [
+        {"role": "system", "content": str(_SYSTEM_PROMPT)},
+        {"role": "user", "content": f"URL: {url}\n\nText:\n{page_text}"},
+    ]
+
     resp = openai_client.responses.parse(
         model="gpt-4o-mini",
         temperature=0,  # ensure deterministic output
-        input=[
-            {"role": "system", "content": _SYSTEM_PROMPT},
-            {"role": "user", "content": f"URL: {url}\n\nText:\n{page_text}"},
-        ],
+        input=messages,
         text_format=ProgramRecordGraph,
         max_output_tokens=600,
     )
