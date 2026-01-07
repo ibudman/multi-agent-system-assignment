@@ -14,6 +14,9 @@ from app.models.schemas import (
 )
 
 
+EMPTY_PATHS: ResultsPayload = {"short_term": [], "medium_term": [], "long_term": []}
+
+
 def results_payload_to_paths(results: ResultsPayload) -> Paths:
     def to_db(p: ProgramRecordGraph) -> ProgramRecordDB:
         return ProgramRecordDB.model_validate(p.model_dump())
@@ -85,11 +88,9 @@ class LearningPathsService:
                 },
             )
 
-            final_state_results: ResultsPayload = final_state.get("results") or {
-                "short_term": [],
-                "medium_term": [],
-                "long_term": [],
-            }
+            final_state_results: ResultsPayload = (
+                final_state.get("results") or EMPTY_PATHS
+            )
             results: LearningPathsResults = results_payload_to_learning_paths_results(
                 final_state_results
             )
@@ -109,5 +110,11 @@ class LearningPathsService:
             )
 
         except Exception as e:
+            self.results_repo.upsert_result(
+                request_id=request_id_str,
+                paths=results_payload_to_paths(EMPTY_PATHS),
+                warnings=[],
+                error="Generation failed",
+            )
             self.requests_repo.mark_failed(request_id=request_id_str, error=str(e))
-            raise e
+            raise
