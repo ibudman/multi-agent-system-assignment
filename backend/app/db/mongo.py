@@ -33,7 +33,7 @@ def disconnect_mongo(client: MongoClient) -> None:
 
 
 def get_db_name() -> str:
-    return os.getenv("MONGODB_DB")
+    return os.getenv("MONGODB_DB", "learning_path_explorer")
 
 
 def init_db(db: Database):

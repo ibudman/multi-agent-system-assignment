@@ -1,15 +1,16 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app.db.mongo import connect_mongo, disconnect_mongo, get_db_name, init_db
 from openai import OpenAI
 from tavily import TavilyClient
 import os
-
 from app.external.mocks import make_mock_tavily_client, make_mock_openai_client
+from app.core.env import validate_env
+from app.db.mongo import connect_mongo, disconnect_mongo, get_db_name, init_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    validate_env()
     # Startup
     mongo_client = connect_mongo()
     app.state.mongo_client = mongo_client
