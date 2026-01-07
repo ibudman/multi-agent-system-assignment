@@ -63,7 +63,7 @@ def adaptive_scout(state: GraphState, tavily_client: TavilyClient) -> GraphState
 
     # 3) map to RawLead list
     new_leads: list[RawLead] = []
-    seen_urls: list[str] = set()
+    seen_urls: set[str] = set()
 
     for res in raw_results:
         url = res.get("url")
