@@ -3,8 +3,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from app.db.models import RequestDoc, RequestInput, Paths, ProgramRecordDB
-from app.db.repos import RequestsRepo, AgentRunsRepo, ResultsRepo
-from app.graph.runner import GraphRunner
+from app.db.protocols import (
+    RequestsRepoProtocol,
+    ResultsRepoProtocol,
+    AgentRunsRepoProtocol,
+)
+from app.graph.protocols import GraphRunnerProtocol
 from app.graph.state import ProgramRecordGraph, ResultsPayload, GraphState
 from app.models.schemas import (
     LearningPathsRequest,
@@ -58,10 +62,10 @@ def results_payload_to_learning_paths_results(
 
 @dataclass
 class LearningPathsService:
-    requests_repo: RequestsRepo
-    agent_runs_repo: AgentRunsRepo
-    results_repo: ResultsRepo
-    runner: GraphRunner
+    requests_repo: RequestsRepoProtocol
+    agent_runs_repo: AgentRunsRepoProtocol
+    results_repo: ResultsRepoProtocol
+    runner: GraphRunnerProtocol
 
     def generate(self, payload: LearningPathsRequest) -> LearningPathsResponse:
         request_id = uuid.uuid4()
