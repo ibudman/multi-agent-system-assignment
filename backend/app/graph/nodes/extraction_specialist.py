@@ -141,7 +141,7 @@ def _llm_program_record(openai_client: OpenAI, url: str, page_text: str) -> dict
 _USD_RE = re.compile(r"\$?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?)\s*(USD|usd|\$)?")
 
 
-def _explicit_usd(cost_text: str) -> Optional[float]:
+def _explicit_usd(cost_text: str) -> float | None:
     if not cost_text or cost_text.strip().lower() == "not specified":
         return None
     m = _USD_RE.search(cost_text)

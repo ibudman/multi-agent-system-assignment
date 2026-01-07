@@ -37,7 +37,7 @@ class ResultsRepo:
     col: Collection
 
     def upsert_result(
-        self, request_id: str, paths: Paths, warnings: list[str], error: Optional[str]
+        self, request_id: str, paths: Paths, warnings: list[str], error: str | None
     ) -> None:
         self.col.update_one(
             {"request_id": request_id},

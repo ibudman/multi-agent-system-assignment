@@ -7,7 +7,7 @@ RESULTS_PER_QUERY = 6
 MAX_LEADS_TOTAL = 12
 
 
-def _build_queries(query: str, prefs: Optional[InputPrefs]) -> list[str]:
+def _build_queries(query: str, prefs: InputPrefs | None) -> list[str]:
     boosters = []
 
     if prefs.get("format"):
