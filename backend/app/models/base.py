@@ -1,5 +1,5 @@
 from typing import List, Literal, Optional
-from pydantic import BaseModel, Field, AnyUrl
+from pydantic import BaseModel, Field
 
 ProgramFormat = Literal["online", "in-person", "hybrid", "Not specified"]
 
@@ -15,5 +15,5 @@ class ProgramRecordBase(BaseModel):
     prerequisites: str = "Not specified"
     location: str = "Not specified"
     who_this_is_for: str = "Not specified"
-    source_link: AnyUrl
-    citation: AnyUrl
+    source_link: str
+    citation: str

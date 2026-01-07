@@ -5,11 +5,12 @@ from datetime import datetime, timezone
 from app.db.models import RequestDoc, RequestInput, Paths, ProgramRecordDB
 from app.db.repos import RequestsRepo, AgentRunsRepo, ResultsRepo
 from app.graph.runner import GraphRunner
-from app.graph.state import ProgramRecordGraph, ResultsPayload
+from app.graph.state import ProgramRecordGraph, ResultsPayload, GraphState
 from app.models.schemas import (
     LearningPathsRequest,
     LearningPathsResponse,
     LearningPathsResults,
+    Program,
 )
 
 
@@ -21,6 +22,34 @@ def results_payload_to_paths(results: ResultsPayload) -> Paths:
         short_term=[to_db(p) for p in results.get("short_term", [])],
         medium_term=[to_db(p) for p in results.get("medium_term", [])],
         long_term=[to_db(p) for p in results.get("long_term", [])],
+    )
+
+
+def results_payload_to_learning_paths_results(
+    results: ResultsPayload,
+) -> LearningPathsResults:
+
+    def to_program(p: ProgramRecordGraph) -> Program:
+        return Program.model_validate(
+            {
+                "program_name": p.program_name,
+                "provider": p.provider,
+                "topics_covered": p.topics_covered,
+                "format": p.format,
+                "duration": p.duration,
+                "cost": p.cost_text,
+                "prerequisites": p.prerequisites,
+                "location": p.location,
+                "who_this_is_for": p.who_this_is_for,
+                "source_link": p.source_link,  # str -> HttpUrl
+                "citation": p.citation,
+            }
+        )
+
+    return LearningPathsResults(
+        short_term=[to_program(p) for p in results.get("short_term", [])],
+        medium_term=[to_program(p) for p in results.get("medium_term", [])],
+        long_term=[to_program(p) for p in results.get("long_term", [])],
     )
 
 
@@ -48,8 +77,7 @@ class LearningPathsService:
         self.requests_repo.create_running(doc)
 
         try:
-            # TODO: implement logic
-            final_state = self.runner.run(
+            final_state: GraphState = self.runner.run(
                 request_id=request_id_str,
                 payload={
                     "query": payload.query,
@@ -57,15 +85,16 @@ class LearningPathsService:
                 },
             )
 
-            final_state_results = final_state.get("results") or {
+            final_state_results: ResultsPayload = final_state.get("results") or {
                 "short_term": [],
                 "medium_term": [],
                 "long_term": [],
             }
-            results = LearningPathsResults.model_validate(
+            results: LearningPathsResults = results_payload_to_learning_paths_results(
                 final_state_results
-            )  # TODO: convert cost
-            warnings = final_state.get("warnings", [])
+            )
+
+            warnings: list[str] = final_state.get("warnings", [])
 
             self.results_repo.upsert_result(
                 request_id=request_id_str,

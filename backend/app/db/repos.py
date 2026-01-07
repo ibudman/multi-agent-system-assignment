@@ -45,7 +45,7 @@ class ResultsRepo:
                 "$set": {
                     "request_id": request_id,
                     "created_at": datetime.now(timezone.utc),
-                    "paths": paths.model_dump(),
+                    "paths": paths.model_dump(mode="json"),
                     "warnings": warnings,  # full-request warnings (final)
                     "error": error,
                 }
