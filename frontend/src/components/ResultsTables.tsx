@@ -13,7 +13,9 @@ function Bucket({
     return (
         <section style={{marginTop: 22}}>
             <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12}}>
-                <h2 style={{margin: 0, fontSize: 18}}>{title}</h2>
+                <h2 style={{margin: 0, fontSize: 18}}>
+                    {title} ({programs.length})
+                </h2>
 
                 <div style={{display: "flex", gap: 8}}>
                     <button
