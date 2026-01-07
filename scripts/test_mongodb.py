@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 import certifi
 
-env_path = Path(__file__).resolve().parent.parent / ".env"
+env_path = Path(__file__).resolve().parent.parent / "backend" / ".env"
 load_dotenv(dotenv_path=env_path)
 
 uri = os.getenv("MONGODB_URI")
