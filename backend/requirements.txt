@@ -11,3 +11,5 @@ openai
 tavily-python
 
 httpx
+
+langgraph
