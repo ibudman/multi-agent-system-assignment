@@ -81,6 +81,16 @@ From the `backend/` directory:
 uvicorn app.main:app --reload
 ```
 
+## Running the Frontend
+
+From the `frontend/` directory:
+
+```bash
+npm run dev
+```
+
+The frontend will be available at [http://localhost:5173](http://localhost:5173).
+
 ## Running Tests
 
 From the `backend/` directory:
