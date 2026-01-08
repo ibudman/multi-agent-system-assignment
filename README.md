@@ -1,7 +1,17 @@
 # Learning Path Explorer
 
-A multi-agent system that generates personalized learning paths based on user goals, preferences, and constraints, using
-LangGraph and external knowledge sources.
+A multi-agent system that discovers, extracts, and structures learning programs into short-, medium-, and long-term
+learning paths based on a user query and preferences.
+
+## Key Features
+
+With this application, you can:
+
+- Generate learning options from a free-text query, with optional preferences (format, goal, budget, location)
+- Organize results into short-, medium-, and long-term learning horizons
+- View key program details side-by-side to compare different options
+- Access source links and citations for all web-sourced information
+- Export each learning horizon independently as JSON or CSV
 
 ## Documentation
 
@@ -23,6 +33,10 @@ Detailed architecture, agent responsibilities, and data flow are documented in t
 
 ## Environment Variables
 
+Create `.env` files based on the provided `.env.example` files in both the `backend/` and `frontend/` directories.
+
+### Backend
+
 | Variable              | Description                                          |
 |-----------------------|------------------------------------------------------|
 | OPENAI_API_KEY        | OpenAI API key used for schema-based extraction      |
@@ -34,7 +48,7 @@ Detailed architecture, agent responsibilities, and data flow are documented in t
 | AWS_SECRET_ACCESS_KEY | AWS secret access key                                |
 | AWS_DEFAULT_REGION    | AWS region                                           |
 
-### Mock & Testing Controls
+#### Mock & Testing Controls
 
 | Variable      | Description                                                 |
 |---------------|-------------------------------------------------------------|
@@ -42,6 +56,14 @@ Detailed architecture, agent responsibilities, and data flow are documented in t
 | MOCK_MODE     | Mock scenario selector (`ux` or `photography`)              |
 
 When `MOCK_EXTERNAL=1`, the system returns deterministic mock outputs for testing and development.
+
+These variables are optional; by default, `MOCK_EXTERNAL` is set to `0` and the system uses real external API calls.
+
+### Frontend
+
+| Variable          | Description                 |
+|-------------------|-----------------------------|
+| VITE_API_BASE_URL | Base URL of the backend API |
 
 ## Data Persistence & Observability
 
@@ -67,7 +89,8 @@ From the `backend/` directory:
 pytest
 ```
 
-Tests focus on service-level logic and graph orchestration, with all external dependencies mocked.
+Tests focus on service-level logic and graph orchestration.
+All external integrations are mocked at the test level to ensure fully deterministic and isolated test runs.
 
 ## API Endpoints
 
