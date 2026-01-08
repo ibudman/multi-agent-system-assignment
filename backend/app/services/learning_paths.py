@@ -1,3 +1,6 @@
+import logging
+
+logger = logging.getLogger(__name__)
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -71,6 +74,12 @@ class LearningPathsService:
         request_id = uuid.uuid4()
         request_id_str = str(request_id)
 
+        logger.info(
+            "learning_paths_start. request_id=%s query_len=%s",
+            request_id_str,
+            len(payload.query),
+        )
+
         doc = RequestDoc(
             request_id=request_id_str,
             created_at=datetime.now(timezone.utc),
@@ -109,16 +118,27 @@ class LearningPathsService:
             )
             self.requests_repo.mark_completed(request_id=request_id_str)
 
+            logger.info(
+                "learning_paths_done. request_id=%s short=%d medium=%d long=%d warnings=%d",
+                request_id_str,
+                len(results.short_term),
+                len(results.medium_term),
+                len(results.long_term),
+                len(warnings),
+            )
+
             return LearningPathsResponse(
                 request_id=request_id, results=results, warnings=warnings
             )
 
         except Exception as e:
+            logger.exception("learning_paths_failed. request_id=%s", request_id_str)
+
             self.results_repo.upsert_result(
                 request_id=request_id_str,
                 paths=results_payload_to_paths(EMPTY_PATHS),
                 warnings=[],
-                error="Generation failed",
+                error="Generation failed. see requests.error for details.",
             )
             self.requests_repo.mark_failed(request_id=request_id_str, error=str(e))
             raise
