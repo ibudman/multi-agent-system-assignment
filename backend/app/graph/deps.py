@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 from typing import Optional
-from openai import OpenAI
-from tavily import TavilyClient
+from app.external.protocols import OpenAIClientProtocol, TavilyClientProtocol
 
 
 @dataclass
 class GraphDeps:
-    openai_client: Optional[OpenAI] = None
-    tavily_client: Optional[TavilyClient] = None
+    openai_client: Optional[OpenAIClientProtocol] = None
+    tavily_client: Optional[TavilyClientProtocol] = None

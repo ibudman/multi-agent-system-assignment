@@ -3,7 +3,7 @@ from typing import Dict, Any
 from dataclasses import dataclass
 
 from app.db.models import AgentRunDoc
-from app.db.repos import AgentRunsRepo
+from app.db.protocols import AgentRunsRepoProtocol
 from app.graph.build import build_graph
 from app.graph.deps import GraphDeps
 from app.graph.state import create_initial_state, InputPayload, GraphState
@@ -51,7 +51,7 @@ def _output_summary(snapshot: Dict[str, Any]) -> dict:
 
 @dataclass
 class GraphRunner:
-    agent_runs_repo: AgentRunsRepo
+    agent_runs_repo: AgentRunsRepoProtocol
     deps: GraphDeps
     graph: Any = None
 

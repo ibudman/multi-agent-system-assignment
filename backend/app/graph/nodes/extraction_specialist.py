@@ -1,8 +1,6 @@
-from openai.types.responses import EasyInputMessageParam
-from tavily import TavilyClient
-from openai import OpenAI
 import re
-from typing import Optional
+
+from app.external.protocols import TavilyClientProtocol, OpenAIClientProtocol
 from app.graph.state import GraphState, ProgramRecordGraph, RawLead
 
 
@@ -28,7 +26,7 @@ def _dedupe_and_select_urls(leads: list[RawLead], max_urls: int) -> list[str]:
 
 
 def _extract_pages(
-    tavily_client: TavilyClient, urls: list[str]
+    tavily_client: TavilyClientProtocol, urls: list[str]
 ) -> tuple[dict[str, str], list[str]]:
     url_to_text: dict[str, str] = {}
     warnings: list[str] = []
@@ -119,8 +117,10 @@ Field rules:
 """.strip()
 
 
-def _llm_program_record(openai_client: OpenAI, url: str, page_text: str) -> dict:
-    messages: list[EasyInputMessageParam] = [
+def _llm_program_record(
+    openai_client: OpenAIClientProtocol, url: str, page_text: str
+) -> dict:
+    messages: list[dict[str, Any]] = [
         {"role": "system", "content": str(_SYSTEM_PROMPT)},
         {"role": "user", "content": f"URL: {url}\n\nText:\n{page_text}"},
     ]
@@ -167,7 +167,9 @@ def _enforce_invariants(rec: dict, url: str) -> dict:
 
 
 def extraction_specialist(
-    state: GraphState, tavily_client: TavilyClient, openai_client: OpenAI
+    state: GraphState,
+    tavily_client: TavilyClientProtocol,
+    openai_client: OpenAIClientProtocol,
 ) -> GraphState:
     leads = state.get("raw_leads") or []
     if not leads:

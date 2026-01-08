@@ -1,5 +1,4 @@
-from tavily import TavilyClient
-from typing import Optional
+from app.external.protocols import TavilyClientProtocol
 from app.graph.state import GraphState, InputPrefs, RawLead
 
 MAX_SEARCH_QUERIES = 3
@@ -33,7 +32,9 @@ def _build_queries(query: str, prefs: InputPrefs | None) -> list[str]:
     return search_queries[:MAX_SEARCH_QUERIES]
 
 
-def adaptive_scout(state: GraphState, tavily_client: TavilyClient) -> GraphState:
+def adaptive_scout(
+    state: GraphState, tavily_client: TavilyClientProtocol
+) -> GraphState:
     inp = state.get("input") or {}
     query = inp.get("query")
     prefs = inp.get("prefs")
