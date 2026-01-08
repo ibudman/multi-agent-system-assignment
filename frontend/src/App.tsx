@@ -39,7 +39,7 @@ export default function App() {
             <h1>Learning Path Explorer</h1>
 
             <LearningForm onSubmit={handleSubmit} disabled={status === "loading"}/>
-            
+
             <div style={{marginTop: 12, color: "#555"}}>
                 {status === "idle" && (
                     <div>Enter a learning goal and optional preferences to begin.</div>
@@ -58,12 +58,17 @@ export default function App() {
 
 
             {data && (
-                <div style={{marginTop: 12}}>
-                    <div style={{color: "#555", fontSize: 12}}>request_id: {data.request_id}</div>
-                    <Warnings warnings={data.warnings}/>
+                <div style={{marginTop: 16}}>
                     <ResultsTables results={data.results}/>
+
+                    <Warnings warnings={data.warnings}/>
+
+                    <div style={{marginTop: 12, color: "#777", fontSize: 12}}>
+                        request_id: {data.request_id}
+                    </div>
                 </div>
             )}
+
         </div>
     );
 }
