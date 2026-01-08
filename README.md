@@ -14,6 +14,13 @@ LangGraph and external knowledge sources.
 - `frontend/` – Simple web UI for submitting queries and viewing results
 - `docs/` – Product and technical documentation
 
+## Architecture & Agents
+
+The system is implemented as a multi-agent workflow using LangGraph, where a graph orchestrates execution and agents
+perform domain-specific tasks such as search, extraction, and validation.
+
+Detailed architecture, agent responsibilities, and data flow are documented in the [TLD](docs/TLD.md).
+
 ## Environment Variables
 
 | Variable              | Description                                          |
@@ -61,3 +68,8 @@ pytest
 ```
 
 Tests focus on service-level logic and graph orchestration, with all external dependencies mocked.
+
+## API Endpoints
+
+- `POST /learning-paths` – Generate a personalized learning path
+- `GET /health` – Health check endpoint
