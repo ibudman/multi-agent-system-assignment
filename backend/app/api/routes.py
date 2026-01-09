@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Response
 from app.db.deps import (
     get_requests_collection,
     get_agent_runs_collection,
@@ -21,6 +21,11 @@ router = APIRouter(prefix="/api")
 def health_check() -> HealthCheckResponse:
     empty_response = HealthCheckResponse(status="ok")
     return empty_response
+
+
+@router.options("/learning-paths")
+def learning_paths_options():
+    return Response(status_code=204)
 
 
 @router.post("/learning-paths")
