@@ -76,10 +76,10 @@ request–response cycle and is associated with a unique request identifier for 
 
 ### Backend APIs
 
-| Endpoint              | Method | Input (Body / Params)                                                          | Output (JSON)                                 | Description                                                                                 |
-|-----------------------|--------|--------------------------------------------------------------------------------|-----------------------------------------------|---------------------------------------------------------------------------------------------|
-| `/api/learning-paths` | POST   | **Body:**<br>• `query` (string, required)<br>• `prefs` (JSON object, optional) | • `request_id`<br>• `results`<br>• `warnings` | Triggers the learning-path discovery pipeline and returns grouped learning options.         |
-| `/api/health`         | GET    | None                                                                           | • `status`                                    | Health check endpoint used by AWS deployment and monitoring to verify service availability. |
+| Endpoint              | Method | Input (Body / Params)                                                          | Output (JSON)                                 | Description                                                                                                                                                                                         |
+|-----------------------|--------|--------------------------------------------------------------------------------|-----------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `/api/learning-paths` | POST   | **Body:**<br>• `query` (string, required)<br>• `prefs` (JSON object, optional) | • `request_id`<br>• `results`<br>• `warnings` | Triggers the learning-path discovery pipeline and returns grouped learning options.                                                                                                                 |
+| `/api/health`         | GET    | None                                                                           | • `status`                                    | Lightweight health check endpoint used by the deployment environment to verify that the backend service is running and able to accept requests. The endpoint does not invoke external dependencies. |
 
 **`prefs` JSON structure**
 
@@ -540,17 +540,24 @@ stored in source control.
 
 ## 9. Deployment Plan
 
+The system is deployed with a clear separation between local development and production environments.
+Local development may use mock integrations for testing, while the deployed production environment
+always runs with real Tavily and OpenAI API integrations.
+
 The backend service is deployed on AWS using Elastic Beanstalk to keep deployment simple and production-oriented.
 
 Elastic Beanstalk supports running multiple instances via an Auto Scaling group, allowing the backend to scale
 horizontally if needed.
 
+CORS is configured at the backend level to explicitly allow requests from the deployed frontend origin.
+This ensures secure browser-based communication between the frontend and backend in production.
+
 MongoDB Atlas is used as the managed database service. The backend connects to the Atlas cluster using the official
 MongoDB Python client and a connection string provided via environment variables.
 
 The frontend is a simple web UI that allows users to submit queries, trigger the pipeline, view results, and export
-outputs. The frontend can be deployed as a static site (e.g., S3 or similar static hosting) and is configured to call
-the deployed backend API.
+outputs. The frontend is deployed as a static site (e.g., AWS S3 + CloudFront) and is configured
+to call the deployed backend API over HTTPS.
 
 High-level deployment and validation steps:
 
@@ -560,3 +567,4 @@ High-level deployment and validation steps:
 - Deploy the frontend and confirm Frontend ↔ Backend ↔ MongoDB integration
 - Validate correctness by issuing test queries and confirming request data, agent outputs, and final results are logged
   in MongoDB
+
