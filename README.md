@@ -5,6 +5,10 @@ learning paths based on a user query and preferences.
 
 ![img.png](img.png)
 
+## Demo Link
+
+https://www.loom.com/share/c2b7733f1def4fcb80e13456d3ade7da
+
 ## Live Application
 
 - **Frontend (UI)**: [https://djsnblkbjqabs.cloudfront.net](https://djsnblkbjqabs.cloudfront.net)
