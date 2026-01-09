@@ -3,6 +3,11 @@
 A multi-agent system that discovers, extracts, and structures learning programs into short-, medium-, and long-term
 learning paths based on a user query and preferences.
 
+## Live Application
+
+- **Frontend (UI)**: [https://djsnblkbjqabs.cloudfront.net](https://djsnblkbjqabs.cloudfront.net)
+- **Backend API**: [https://d6113uwmkus7x.cloudfront.net](https://d6113uwmkus7x.cloudfront.net)
+
 ## Key Features
 
 With this application, you can:
@@ -23,6 +28,45 @@ With this application, you can:
 - `backend/` – FastAPI backend, LangGraph agents, persistence, and integrations
 - `frontend/` – Simple web UI for submitting queries and viewing results
 - `docs/` – Product and technical documentation
+
+## Deployment Architecture
+
+The system is deployed as a distributed web application:
+
+- A React frontend served via AWS CloudFront
+- A FastAPI backend hosted on AWS
+- MongoDB Atlas used as the primary data store
+- External integrations with Tavily and OpenAI
+
+### Backend Deployment
+
+- The backend is deployed as a stateless FastAPI service
+- All configuration is provided via environment variables
+- No local filesystem state is required
+- This allows multiple backend instances to run behind a load balancer
+
+### Environment Configuration
+
+Sensitive configuration is managed via environment variables, including:
+
+- API keys (OpenAI, Tavily)
+- MongoDB connection URI
+- Frontend origin (CORS)
+
+Mock- and test-specific configuration flags are intended for local development and testing only
+and are not enabled in the deployed production environment.
+
+### Frontend–Backend Integration
+
+- The frontend communicates with the backend via HTTPS
+- CORS is explicitly configured to allow the deployed frontend origin
+- The backend exposes a stable `/api` interface consumed by the UI
+
+### Database Deployment
+
+- MongoDB Atlas is used as a managed cloud database
+- The backend connects using the official MongoDB Python client
+- User queries, agent runs, results, and metadata are persisted
 
 ## Architecture & Agents
 
