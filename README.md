@@ -81,16 +81,13 @@ Create `.env` files based on the provided `.env.example` files in both the `back
 
 ### Backend
 
-| Variable              | Description                                          |
-|-----------------------|------------------------------------------------------|
-| OPENAI_API_KEY        | OpenAI API key used for schema-based extraction      |
-| TAVILY_API_KEY        | Tavily API key for web search and content extraction |
-| MONGODB_URI           | MongoDB Atlas connection string                      |
-| MONGODB_DB            | MongoDB database name                                |
-| CORS_ORIGINS          | Allowed frontend origin for CORS                     |
-| AWS_ACCESS_KEY_ID     | AWS access key                                       |
-| AWS_SECRET_ACCESS_KEY | AWS secret access key                                |
-| AWS_DEFAULT_REGION    | AWS region                                           |
+| Variable       | Description                                          |
+|----------------|------------------------------------------------------|
+| OPENAI_API_KEY | OpenAI API key used for schema-based extraction      |
+| TAVILY_API_KEY | Tavily API key for web search and content extraction |
+| MONGODB_URI    | MongoDB Atlas connection string                      |
+| MONGODB_DB     | MongoDB database name                                |
+| CORS_ORIGINS   | Allowed frontend origin for CORS                     |
 
 #### Mock & Testing Controls
 
