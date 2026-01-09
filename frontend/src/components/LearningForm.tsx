@@ -14,6 +14,24 @@ export function LearningForm({
     const [budget, setBudget] = useState("");
     const [city, setCity] = useState("");
 
+    const labelStyle: React.CSSProperties = {
+        display: "grid",
+        gap: 6,
+        fontSize: 13,
+        color: "#2f2f3a",
+    };
+
+    const inputStyle: React.CSSProperties = {
+        padding: "10px 12px",
+        borderRadius: 12,
+        border: "1px solid #d9d9e3",
+        outline: "none",
+        fontSize: 14,
+        background: disabled ? "#fafafa" : "#fff",
+    };
+
+    const buttonDisabled = disabled || !query.trim();
+
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
@@ -31,24 +49,38 @@ export function LearningForm({
     }
 
     return (
-        <form onSubmit={handleSubmit} style={{display: "grid", gap: 12, maxWidth: 700}}>
-            <label style={{display: "grid", gap: 6}}>
-                What do you want to learn? *
+        <form onSubmit={handleSubmit} style={{display: "grid", gap: 12, maxWidth: 720}}>
+            <label style={labelStyle}>
+                What do you want to learn? <span style={{color: "crimson"}}>*</span>
                 <textarea
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     rows={3}
                     disabled={disabled}
                     placeholder='e.g. "I want to learn UX design online while working full-time"'
+                    style={{...inputStyle, resize: "vertical"}}
                 />
             </label>
 
-            <div style={{fontWeight: 600, marginTop: 6}}>Optional preferences</div>
+            <div style={{fontWeight: 700, marginTop: 4, color: "#111827"}}>
+                Optional preferences
+            </div>
 
-            <div style={{display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12}}>
-                <label style={{display: "grid", gap: 6}}>
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                    gap: 12,
+                }}
+            >
+                <label style={labelStyle}>
                     Format
-                    <select value={format} onChange={(e) => setFormat(e.target.value)} disabled={disabled}>
+                    <select
+                        value={format}
+                        onChange={(e) => setFormat(e.target.value)}
+                        disabled={disabled}
+                        style={inputStyle}
+                    >
                         <option value="">Any</option>
                         <option value="online">Online</option>
                         <option value="in-person">In-person</option>
@@ -56,9 +88,14 @@ export function LearningForm({
                     </select>
                 </label>
 
-                <label style={{display: "grid", gap: 6}}>
+                <label style={labelStyle}>
                     Goal
-                    <select value={goal} onChange={(e) => setGoal(e.target.value)} disabled={disabled}>
+                    <select
+                        value={goal}
+                        onChange={(e) => setGoal(e.target.value)}
+                        disabled={disabled}
+                        style={inputStyle}
+                    >
                         <option value="">Any</option>
                         <option value="hobby">Hobby</option>
                         <option value="career">Career</option>
@@ -66,9 +103,14 @@ export function LearningForm({
                     </select>
                 </label>
 
-                <label style={{display: "grid", gap: 6}}>
+                <label style={labelStyle}>
                     Budget
-                    <select value={budget} onChange={(e) => setBudget(e.target.value)} disabled={disabled}>
+                    <select
+                        value={budget}
+                        onChange={(e) => setBudget(e.target.value)}
+                        disabled={disabled}
+                        style={inputStyle}
+                    >
                         <option value="">Any</option>
                         <option value="free">Free</option>
                         <option value="low-cost">Low-cost</option>
@@ -76,18 +118,32 @@ export function LearningForm({
                     </select>
                 </label>
 
-                <label style={{display: "grid", gap: 6}}>
+                <label style={labelStyle}>
                     City
                     <input
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         disabled={disabled}
                         placeholder="e.g. New York"
+                        style={inputStyle}
                     />
                 </label>
             </div>
 
-            <button type="submit" disabled={disabled || !query.trim()}>
+            <button
+                type="submit"
+                disabled={buttonDisabled}
+                style={{
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid #111827",
+                    background: buttonDisabled ? "#f2f2f6" : "#111827",
+                    color: buttonDisabled ? "#666" : "#fff",
+                    cursor: buttonDisabled ? "not-allowed" : "pointer",
+                    fontWeight: 700,
+                    width: "fit-content",
+                }}
+            >
                 Show Me Learning Paths
             </button>
         </form>

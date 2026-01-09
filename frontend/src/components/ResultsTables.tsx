@@ -1,6 +1,20 @@
 import type {Program, Results} from "../types";
 import {exportJson, exportProgramsCsv} from "../utils/export";
 
+const COLUMN_WIDTHS = [
+    "220px", // Program name
+    "160px", // Provider
+    "220px", // Topics covered
+    "90px",  // Format
+    "110px", // Duration
+    "110px", // Cost
+    "160px", // Prerequisites
+    "120px", // Location
+    "260px", // Who this is for
+    "110px", // Source link
+    "110px", // Citation
+];
+
 function Bucket({
                     title,
                     programs,
@@ -10,25 +24,44 @@ function Bucket({
     programs: Program[];
     fileKey: string;
 }) {
+    const empty = programs.length === 0;
+
     return (
-        <section style={{marginTop: 22}}>
-            <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12}}>
-                <h2 style={{margin: 0, fontSize: 18}}>
-                    {title} ({programs.length})
+        <section
+            style={{
+                marginTop: 16,
+                background: "#fff",
+                border: "1px solid #e9e9ef",
+                borderRadius: 16,
+                padding: 14,
+                boxShadow: "0 6px 18px rgba(20, 20, 40, 0.04)",
+            }}
+        >
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                }}
+            >
+                <h2 style={{margin: 0, fontSize: 16, color: "#111827"}}>
+                    {title} <span style={{color: "#6b7280", fontWeight: 600}}>({programs.length})</span>
                 </h2>
 
                 <div style={{display: "flex", gap: 8}}>
                     <button
                         type="button"
-                        disabled={programs.length === 0}
+                        disabled={empty}
                         onClick={() => exportJson(programs, `${fileKey}.json`)}
                         style={{
                             padding: "8px 10px",
-                            borderRadius: 10,
-                            border: "1px solid #999",
+                            borderRadius: 12,
+                            border: "1px solid #d1d5db",
                             background: "#fff",
-                            opacity: programs.length === 0 ? 0.5 : 1,
-                            cursor: programs.length === 0 ? "not-allowed" : "pointer",
+                            opacity: empty ? 0.5 : 1,
+                            cursor: empty ? "not-allowed" : "pointer",
+                            fontWeight: 600,
                         }}
                     >
                         Export JSON
@@ -36,28 +69,41 @@ function Bucket({
 
                     <button
                         type="button"
-                        disabled={programs.length === 0}
+                        disabled={empty}
                         onClick={() => exportProgramsCsv(programs, `${fileKey}.csv`)}
                         style={{
                             padding: "8px 10px",
-                            borderRadius: 10,
-                            border: "1px solid #999",
+                            borderRadius: 12,
+                            border: "1px solid #d1d5db",
                             background: "#fff",
-                            opacity: programs.length === 0 ? 0.5 : 1,
-                            cursor: programs.length === 0 ? "not-allowed" : "pointer",
+                            opacity: empty ? 0.5 : 1,
+                            cursor: empty ? "not-allowed" : "pointer",
+                            fontWeight: 600,
                         }}
                     >
                         Export CSV
                     </button>
-
                 </div>
             </div>
 
-            {programs.length === 0 ? (
-                <div style={{marginTop: 10, color: "#555"}}>No programs found.</div>
+            {empty ? (
+                <div style={{marginTop: 10, color: "#6b7280"}}>No programs found.</div>
             ) : (
-                <div style={{overflowX: "auto", marginTop: 10, border: "1px solid #eee", borderRadius: 12}}>
-                    <table style={{width: "100%", borderCollapse: "collapse", minWidth: 1100}}>
+                <div
+                    style={{
+                        overflowX: "auto",
+                        marginTop: 10,
+                        border: "1px solid #eef0f4",
+                        borderRadius: 12,
+                    }}
+                >
+                    <table style={{width: "100%", borderCollapse: "collapse", minWidth: 1500}}>
+                        <colgroup>
+                            {COLUMN_WIDTHS.map((w, i) => (
+                                <col key={i} style={{width: w}}/>
+                            ))}
+                        </colgroup>
+
                         <thead>
                         <tr>
                             {[
@@ -78,9 +124,12 @@ function Bucket({
                                     style={{
                                         textAlign: "left",
                                         padding: 10,
-                                        borderBottom: "1px solid #eee",
+                                        borderBottom: "1px solid #eef0f4",
                                         background: "#fafafa",
                                         fontSize: 12,
+                                        color: "#374151",
+                                        fontWeight: 700,
+                                        whiteSpace: "nowrap",
                                     }}
                                 >
                                     {h}
@@ -92,7 +141,12 @@ function Bucket({
                         <tbody>
                         {programs.map((p, idx) => (
                             <tr key={`${p.program_name}-${idx}`}>
-                                <td style={{padding: 10, borderBottom: "1px solid #f1f1f1", fontWeight: 600}}>
+                                <td style={{
+                                    padding: 10,
+                                    borderBottom: "1px solid #f1f1f1",
+                                    fontWeight: 700,
+                                    color: "#111827"
+                                }}>
                                     {p.program_name}
                                 </td>
                                 <td style={{padding: 10, borderBottom: "1px solid #f1f1f1"}}>{p.provider}</td>
@@ -115,7 +169,6 @@ function Bucket({
                                         View citation
                                     </a>
                                 </td>
-
                             </tr>
                         ))}
                         </tbody>
