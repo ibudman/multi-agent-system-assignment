@@ -9,8 +9,8 @@ from app.core.lifespan import lifespan
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path, override=False)
 
-frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
-cors_origins = [o.strip().rstrip("/") for o in frontend_origin.split(",") if o.strip()]
+raw = os.getenv("CORS_ORIGINS", "http://localhost:5173")
+cors_origins = [o.strip().rstrip("/") for o in raw.split(",") if o.strip()]
 app = FastAPI(title="Multi-Agent System Assignment", lifespan=lifespan)
 
 app.add_middleware(
