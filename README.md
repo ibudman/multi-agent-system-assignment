@@ -3,7 +3,7 @@
 A multi-agent system that discovers, extracts, and structures learning programs into short-, medium-, and long-term
 learning paths based on a user query and preferences.
 
-![img_1.png](img_1.png)
+![img.png](img.png)
 
 ## Live Application
 
