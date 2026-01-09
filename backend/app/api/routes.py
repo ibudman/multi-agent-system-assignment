@@ -23,11 +23,6 @@ def health_check() -> HealthCheckResponse:
     return empty_response
 
 
-@router.options("/learning-paths")
-def learning_paths_options():
-    return Response(status_code=204)
-
-
 @router.post("/learning-paths")
 def generate_learning_paths(
     request: Request, payload: LearningPathsRequest
