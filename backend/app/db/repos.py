@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from pymongo.collection import Collection
 
-from app.db.models import RequestDoc, AgentRunDoc, Paths
+from app.db.models import RequestDoc, AgentRunDoc, Paths, CacheDoc
 
 
 @dataclass
@@ -50,5 +50,23 @@ class ResultsRepo:
                     "error": error,
                 }
             },
+            upsert=True,
+        )
+
+
+@dataclass
+class CacheRepo:
+    col: Collection
+
+    def get(self, cache_key: str) -> CacheDoc | None:
+        doc = self.col.find_one({"cache_key": cache_key}, {"_id": 0})
+        if doc:
+            return CacheDoc.model_validate(doc)
+        return None
+
+    def set(self, doc: CacheDoc) -> None:
+        self.col.update_one(
+            {"cache_key": doc.cache_key},
+            {"$set": doc.model_dump(mode="json")},
             upsert=True,
         )

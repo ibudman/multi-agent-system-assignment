@@ -59,3 +59,4 @@ class LearningPathsResponse(BaseModel):
     request_id: UUID
     results: LearningPathsResults
     warnings: List[str] = Field(default_factory=list)
+    cache_hit: bool = False

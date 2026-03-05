@@ -6,6 +6,7 @@ from app.db.mongo import (
     REQUESTS_COLLECTION,
     AGENT_RUNS_COLLECTION,
     RESULTS_COLLECTION,
+    CACHE_COLLECTION,
 )
 
 
@@ -24,3 +25,7 @@ def get_agent_runs_collection(request: Request) -> Collection:
 
 def get_results_collection(request: Request) -> Collection:
     return get_db(request)[RESULTS_COLLECTION]
+
+
+def get_cache_collection(request: Request) -> Collection:
+    return get_db(request)[CACHE_COLLECTION]

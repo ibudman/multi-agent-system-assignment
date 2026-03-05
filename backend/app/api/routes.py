@@ -3,8 +3,9 @@ from app.db.deps import (
     get_requests_collection,
     get_agent_runs_collection,
     get_results_collection,
+    get_cache_collection,
 )
-from app.db.repos import RequestsRepo, AgentRunsRepo, ResultsRepo
+from app.db.repos import RequestsRepo, AgentRunsRepo, ResultsRepo, CacheRepo
 from app.graph.runner import GraphRunner
 from app.models.schemas import (
     HealthCheckResponse,
@@ -30,6 +31,7 @@ def generate_learning_paths(
     requests_repo = RequestsRepo(get_requests_collection(request))
     agent_runs_repo = AgentRunsRepo(get_agent_runs_collection(request))
     results_repo = ResultsRepo(get_results_collection(request))
+    cache_repo = CacheRepo(get_cache_collection(request))
 
     openai_client = request.app.state.openai_client
     tavily_client = request.app.state.tavily_client
@@ -42,6 +44,7 @@ def generate_learning_paths(
         agent_runs_repo=agent_runs_repo,
         results_repo=results_repo,
         runner=runner,
+        cache_repo=cache_repo,
     )
     try:
         return service.generate(payload)

@@ -1,9 +1,9 @@
 import pytest
 import uuid
-from app.db.models import RequestDoc, Paths
+from app.db.models import RequestDoc, Paths, CacheDoc
 from app.graph.state import ProgramRecordGraph, GraphState, InputPayload
 from app.models.schemas import Program, LearningPathsRequest, LearningPrefs
-from app.services.learning_paths import LearningPathsService
+from app.services.learning_paths import LearningPathsService, _make_cache_key
 
 
 class DummyRequestsRepo:
@@ -45,6 +45,23 @@ class DummyAgentRunsRepo:
 
     def insert_run(self, doc: RequestDoc):
         pass
+
+
+class DummyCacheRepo:
+    def __init__(self, cached_doc: CacheDoc | None = None):
+        self.store: dict[str, CacheDoc] = {}
+        self.gets: list[str] = []
+        self.sets: list[CacheDoc] = []
+        if cached_doc is not None:
+            self.store[cached_doc.cache_key] = cached_doc
+
+    def get(self, cache_key: str) -> CacheDoc | None:
+        self.gets.append(cache_key)
+        return self.store.get(cache_key)
+
+    def set(self, doc: CacheDoc) -> None:
+        self.sets.append(doc)
+        self.store[doc.cache_key] = doc
 
 
 class FakeRunner:
@@ -154,6 +171,7 @@ def test_generate_happy_path():
         agent_runs_repo=agent_runs_repo,
         results_repo=results_repo,
         runner=runner,
+        cache_repo=DummyCacheRepo(),
     )
 
     payload = LearningPathsRequest(
@@ -231,6 +249,7 @@ def test_generate_runner_failure():
         agent_runs_repo=agent_runs_repo,
         results_repo=results_repo,
         runner=runner,
+        cache_repo=DummyCacheRepo(),
     )
 
     payload = LearningPathsRequest(
@@ -282,3 +301,129 @@ def test_generate_runner_failure():
 
     # runner request_id should match the one persisted
     assert call["request_id"] == request_id_str
+
+
+# Verifies that a cache hit skips the graph runner and returns the cached result.
+def test_generate_cache_hit():
+    from datetime import datetime, timezone
+    from app.db.models import ProgramRecordDB
+
+    # --- Arrange ---
+    program = ProgramRecordDB(
+        program_name="Cached Program",
+        provider="Cache Provider",
+        topics_covered=["caching"],
+        format="online",
+        duration="1 week",
+        cost_usd=None,
+        cost_text="Free",
+        prerequisites="None",
+        location="Online",
+        who_this_is_for="Everyone",
+        source_link="https://example.com",
+        citation="https://example.com",
+    )
+    cached_paths = Paths(short_term=[program], medium_term=[], long_term=[])
+
+    payload = LearningPathsRequest(query="ux design", prefs=None)
+    cache_key = _make_cache_key(payload.query, None)
+
+    cached_doc = CacheDoc(
+        cache_key=cache_key,
+        cached_at=datetime.now(timezone.utc),
+        paths=cached_paths,
+        warnings=["cached warning"],
+    )
+
+    requests_repo = DummyRequestsRepo()
+    results_repo = DummyResultsRepo()
+    agent_runs_repo = DummyAgentRunsRepo()
+    cache_repo = DummyCacheRepo(cached_doc=cached_doc)
+    runner = FakeRunner(state={})
+
+    service = LearningPathsService(
+        requests_repo=requests_repo,
+        agent_runs_repo=agent_runs_repo,
+        results_repo=results_repo,
+        runner=runner,
+        cache_repo=cache_repo,
+    )
+
+    # --- Act ---
+    response = service.generate(payload)
+
+    # --- Assert ---
+    assert response.cache_hit is True
+    assert response.warnings == ["cached warning"]
+    assert len(response.results.short_term) == 1
+    assert response.results.short_term[0].program_name == "Cached Program"
+
+    # Graph was never called
+    assert len(runner.calls) == 0
+
+    # Results repo was never written to
+    assert len(results_repo.upserts) == 0
+
+    # Request was created and completed
+    assert len(requests_repo.created) == 1
+    assert requests_repo.created[0].status == "completed"
+    assert requests_repo.completed == [str(response.request_id)]
+
+    # Cache was queried but not written to again
+    assert len(cache_repo.gets) == 1
+    assert len(cache_repo.sets) == 0
+
+
+# Verifies that a cache miss runs the graph and stores results in the cache.
+def test_generate_cache_miss_stores_result():
+    from app.db.models import ProgramRecordDB
+
+    program = ProgramRecordGraph(
+        program_name="New Program",
+        provider="New Provider",
+        topics_covered=["design"],
+        format="online",
+        duration="2 weeks",
+        cost_usd=None,
+        cost_text="Free",
+        prerequisites="None",
+        location="Online",
+        who_this_is_for="Beginners",
+        source_link="https://example.com/new",
+        citation="https://example.com/new",
+    )
+    fake_state: GraphState = {
+        "results": {"short_term": [program], "medium_term": [], "long_term": []},
+        "warnings": [],
+    }
+
+    requests_repo = DummyRequestsRepo()
+    results_repo = DummyResultsRepo()
+    agent_runs_repo = DummyAgentRunsRepo()
+    cache_repo = DummyCacheRepo()  # empty cache
+    runner = FakeRunner(state=fake_state)
+
+    service = LearningPathsService(
+        requests_repo=requests_repo,
+        agent_runs_repo=agent_runs_repo,
+        results_repo=results_repo,
+        runner=runner,
+        cache_repo=cache_repo,
+    )
+
+    payload = LearningPathsRequest(query="graphic design", prefs=None)
+
+    # --- Act ---
+    response = service.generate(payload)
+
+    # --- Assert ---
+    assert response.cache_hit is False
+
+    # Graph was called
+    assert len(runner.calls) == 1
+
+    # Cache was populated after run
+    assert len(cache_repo.sets) == 1
+    stored = cache_repo.sets[0]
+    assert stored.cache_key == _make_cache_key(payload.query, None)
+    assert len(stored.paths.short_term) == 1

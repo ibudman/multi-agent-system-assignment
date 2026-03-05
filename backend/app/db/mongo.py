@@ -7,6 +7,9 @@ from pymongo.synchronous.database import Database
 REQUESTS_COLLECTION = "requests"
 AGENT_RUNS_COLLECTION = "agent_runs"
 RESULTS_COLLECTION = "results"
+CACHE_COLLECTION = "query_cache"
+
+CACHE_TTL_SECONDS = 86400  # 24 hours
 
 
 def connect_mongo() -> MongoClient:
@@ -40,3 +43,5 @@ def init_db(db: Database):
     db[REQUESTS_COLLECTION].create_index("request_id", unique=True)
     db[AGENT_RUNS_COLLECTION].create_index("request_id")
     db[RESULTS_COLLECTION].create_index("request_id", unique=True)
+    db[CACHE_COLLECTION].create_index("cache_key", unique=True)
+    db[CACHE_COLLECTION].create_index("cached_at", expireAfterSeconds=CACHE_TTL_SECONDS)

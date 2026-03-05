@@ -1,5 +1,5 @@
-from typing import Protocol
-from app.db.models import RequestDoc, Paths
+from typing import Protocol, Optional
+from app.db.models import RequestDoc, Paths, CacheDoc
 
 
 class RequestsRepoProtocol(Protocol):
@@ -16,3 +16,8 @@ class ResultsRepoProtocol(Protocol):
 
 class AgentRunsRepoProtocol(Protocol):
     def insert_run(self, doc: RequestDoc) -> None: ...
+
+
+class CacheRepoProtocol(Protocol):
+    def get(self, cache_key: str) -> Optional[CacheDoc]: ...
+    def set(self, doc: CacheDoc) -> None: ...

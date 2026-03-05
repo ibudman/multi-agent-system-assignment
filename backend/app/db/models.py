@@ -68,3 +68,13 @@ class ResultDoc(BaseModel):
     paths: Paths = Field(default_factory=Paths)
     warnings: List[str] = Field(default_factory=list)
     error: Optional[str] = None
+
+
+# ---------- query_cache collection ----------
+
+
+class CacheDoc(BaseModel):
+    cache_key: str
+    cached_at: datetime
+    paths: Paths = Field(default_factory=Paths)
+    warnings: List[str] = Field(default_factory=list)
